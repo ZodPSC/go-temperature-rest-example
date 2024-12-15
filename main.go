@@ -96,7 +96,7 @@ func (ts *TemperatureServer) createTemperatureHandler(w http.ResponseWriter, req
 	}
 
 	id := ts.store.CreateTemperature(rt.Value, rt.City, rt.Datetime)
-	js, err := json.Marshal(ResponseId{{Id: id}})
+	js, err := json.Marshal(ResponseId{Id: id})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -139,7 +139,7 @@ func (ts *TemperatureServer) deleteTemperatureHandler(w http.ResponseWriter, req
 	}
 }
 
-func (ts *TemperatureServer) getTemperatureHandler(w http.ResponseWriter, req http.Request) {
+func (ts *TemperatureServer) getTemperatureHandler(w http.ResponseWriter, req *http.Request, id int) {
 	log.Printf("handling get task at %s\n", req.URL.Path)
 
 	id, err := strconv.Atoi(req.PathValue("id"))
@@ -158,6 +158,45 @@ func (ts *TemperatureServer) getTemperatureHandler(w http.ResponseWriter, req ht
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(js)
+}
+
+func (ts *TemperatureServer) cityHandler(w http.ResponseWriter, req *http.Request) {
+	log.Printf("handling temperatures by city at %s\n", req.URL.Path)
+
+	city := req.PathValue("city")
+
+	temperatures := ts.store.GetTemperaturesByCity(city)
+	js, err := json.Marshal(temperatures)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(js)
+}
+
+func (ts *TemperatureServer) datetimeHandler(w http.ResponseWriter, req *http.Request) {
+	log.Printf("handling temperatures by datetime at %s\n", req.URL.Path)
+
+	badRequestError := func() {
+		http.Error(w, fmt.Sprintf("use /datetime/<year>/<month>/<day>, got %v", req.URL.Path), http.StatusBadRequest)
+	}
+
+	year, errYear := strconv.Atoi(req.PathValue("year"))
+	month, errMonth := strconv.Atoi(req.PathValue("month"))
+	day, errDay := strconv.Atoi(req.PathValue("day"))
+	if errYear != nil || errMonth != nil || errDay != nil || month < int(time.January) || month > int(time.December) {
+		badRequestError()
+		return
+	}
+
+	temperatures := ts.store.GetTemperaturesByDatetime(year, time.Month(month), day)
+	js, err := json.Marshal(temperatures)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(js)

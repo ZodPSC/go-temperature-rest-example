@@ -20,7 +20,7 @@ type TemperatureStore struct {
 
 func New() *TemperatureStore
 
-func (ts *TemperatureStore) CreateTemperature(value int, city string, datetime time.Time)
+func (ts *TemperatureStore) CreateTemperature(value int, city string, datetime time.Time) int
 
 func (ts *TemperatureStore) GetTemperature(id int) (Temperature, error)
 
