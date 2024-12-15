@@ -7,6 +7,7 @@ import (
 	"log"
 	"mime"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +19,8 @@ func main() {
 	mux.HandleFunc("/temperature/", server.temperatureHandler)
 	mux.HandleFunc("/city/", server.cityHandler)
 	mux.HandleFunc("/datetime/", server.datetimeHandler)
+
+	log.Fatal(http.ListenAndServe("localhost:"+os.Getenv("SERVERPORT"), mux))
 }
 
 type TemperatureServer struct {
