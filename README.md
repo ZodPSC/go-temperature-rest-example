@@ -1,0 +1,1 @@
+# go-temperature-rest-example
